@@ -116,7 +116,7 @@ void findFunc(uint32_t dllBase, uint32_t* hashes, void*** ptrs, size_t size) {
 
 __declspec(naked)
 void* getPEB() {
-    __asm mov EAX, FS: [30h]
+    __asm mov EAX, FS:[30h]
     __asm ret
 }
 
@@ -124,28 +124,29 @@ void init(AI *ai) {
     PPEB peb = getPEB();
     uintptr_t kernel32Base = 0;
 
-    for (PLIST_ENTRY ptr = peb->Ldr->InMemoryOrderModuleList.Flink;; ptr = ptr->Flink) {
+    for (PLIST_ENTRY ptr = peb->Ldr->InMemoryOrderModuleList.Flink; kernel32Base == 0; ptr = ptr->Flink) {
         PLDR_DATA_TABLE_ENTRY e = CONTAINING_RECORD(ptr, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
         UNICODE_STRING* BaseDllName = e->Reserved4;
         uint32_t dllNameHash = hash(BaseDllName->Buffer);
 
-        if (dllNameHash == KERNEL32DLL_UCASE_HASH || dllNameHash == KERNEL32DLL_LCASE_HASH) {
+        if (dllNameHash == KERNEL32DLL_UCASE_HASH || dllNameHash == KERNEL32DLL_LCASE_HASH)
             kernel32Base = e->DllBase;
-            break;
-        }
-
-        if (e->DllBase == 0)
-            break;
     }
 
     if (kernel32Base == 0)
         return;
 
-    uint32_t KernelH[] = { 0x5FBFF0FB, 0x5A153F58, 0xB511FC4D, 0x348B7545, 0xB769339E };
-    findFunc(kernel32Base, KernelH, &ai->AI_LoadLibraryA, 5);
+    uint32_t Kernel32Hashes[] = {
+        0x5FBFF0FB,
+        0x5A153F58,
+        0xB511FC4D,
+        0x348B7545,
+        0xB769339E
+    };
+    findFunc(kernel32Base, Kernel32Hashes, &ai->AI_LoadLibraryA, ARRAYSIZE(Kernel32Hashes));
 
     HMODULE user32 = ai->AI_LoadLibraryA("USER32.DLL");
-    uint32_t UserH[] = {
+    uint32_t User32Hashes[] = {
         0x110F756F,
         0xEF1BD604,
         0x932EB07E,
@@ -161,9 +162,11 @@ void init(AI *ai) {
         0x2C1A4AD8,
         0x68F05E41,
     };
-    findFunc(user32, UserH, &ai->AI_LoadIconA, 14);
+    findFunc(user32, User32Hashes, &ai->AI_LoadIconA, ARRAYSIZE(User32Hashes));
 
     HMODULE gdi32 = ai->AI_LoadLibraryA("GDI32.DLL");
-    uint32_t GdiH[] = { 0x6F828843 };
-    findFunc(gdi32, GdiH, &ai->AI_SetBkMode, 1);
+    uint32_t Gdi32Hashes[] = {
+        0x6F828843
+    };
+    findFunc(gdi32, Gdi32Hashes, &ai->AI_SetBkMode, ARRAYSIZE(Gdi32Hashes));
 }
