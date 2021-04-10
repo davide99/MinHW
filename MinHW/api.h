@@ -34,6 +34,7 @@ typedef LRESULT(__stdcall* DefWindowProcA_t)(HWND, UINT, WPARAM, LPARAM);
 typedef int(__stdcall* SetBkMode_t)(HDC, int);
 
 typedef struct {
+#pragma pack(push, 1)
     //KERNEL32
     LoadLibraryA_t AI_LoadLibraryA;
     GetModuleHandleA_t AI_GetModuleHandleA;
@@ -59,6 +60,7 @@ typedef struct {
 
     //GDI32
     SetBkMode_t AI_SetBkMode;
+#pragma pack(pop)
 } AI;
 
 uint32_t hash(uint8_t* str) {
@@ -107,7 +109,7 @@ void findFunc(uint32_t dllBase, uint32_t* hashes, void*** ptrs, size_t size) {
 
             function_RVA = *(uintptr_t*)((uint8_t*)dllBase + address_table_RVA + ordinal_function * 4);
 
-            *ptrs[j] = (uint8_t*)dllBase + function_RVA;
+            ptrs[j] = (uint8_t*)dllBase + function_RVA;
         }
     }
 }

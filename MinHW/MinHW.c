@@ -86,7 +86,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
         break;
 
     default:
-        return AI_DefWindowProcA(hwnd, message, wParam, lParam);
+        return ai.AI_DefWindowProcA(hwnd, message, wParam, lParam);
     }
 
     return 0;
