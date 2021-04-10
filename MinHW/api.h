@@ -33,31 +33,33 @@ typedef LRESULT(__stdcall* DefWindowProcA_t)(HWND, UINT, WPARAM, LPARAM);
 //GDI32.DLL
 typedef int(__stdcall* SetBkMode_t)(HDC, int);
 
-//KERNEL32
-LoadLibraryA_t AI_LoadLibraryA;
-GetModuleHandleA_t AI_GetModuleHandleA;
-GetCommandLineA_t AI_GetCommandLineA;
-GetStartupInfoA_t AI_GetStartupInfoA;
-ExitProcess_t AI_ExitProcess;
+typedef struct {
+    //KERNEL32
+    LoadLibraryA_t AI_LoadLibraryA;
+    GetModuleHandleA_t AI_GetModuleHandleA;
+    GetCommandLineA_t AI_GetCommandLineA;
+    GetStartupInfoA_t AI_GetStartupInfoA;
+    ExitProcess_t AI_ExitProcess;
 
-//USER32
-LoadIconA_t AI_LoadIconA;
-LoadCursorA_t AI_LoadCursorA;
-RegisterClassExA_t AI_RegisterClassExA;
-CreateWindowExA_t AI_CreateWindowExA;
-UpdateWindow_t AI_UpdateWindow;
-GetMessageA_t AI_GetMessageA;
-TranslateMessage_t AI_TranslateMessage;
-DispatchMessageA_t AI_DispatchMessageA;
-PostQuitMessage_t AI_PostQuitMessage;
-BeginPaint_t AI_BeginPaint;
-GetClientRect_t AI_GetClientRect;
-DrawTextA_t AI_DrawTextA;
-EndPaint_t AI_EndPaint;
-DefWindowProcA_t AI_DefWindowProcA;
+    //USER32
+    LoadIconA_t AI_LoadIconA;
+    LoadCursorA_t AI_LoadCursorA;
+    RegisterClassExA_t AI_RegisterClassExA;
+    CreateWindowExA_t AI_CreateWindowExA;
+    UpdateWindow_t AI_UpdateWindow;
+    GetMessageA_t AI_GetMessageA;
+    TranslateMessage_t AI_TranslateMessage;
+    DispatchMessageA_t AI_DispatchMessageA;
+    PostQuitMessage_t AI_PostQuitMessage;
+    BeginPaint_t AI_BeginPaint;
+    GetClientRect_t AI_GetClientRect;
+    DrawTextA_t AI_DrawTextA;
+    EndPaint_t AI_EndPaint;
+    DefWindowProcA_t AI_DefWindowProcA;
 
-//GDI32
-SetBkMode_t AI_SetBkMode;
+    //GDI32
+    SetBkMode_t AI_SetBkMode;
+} AI;
 
 uint32_t hash(uint8_t* str) {
     uint32_t hash = 5381;
@@ -116,7 +118,7 @@ void* getPEB() {
     __asm ret
 }
 
-void* init() {
+void init(AI *ai) {
     PPEB peb = getPEB();
     uintptr_t kernel32Base = 0;
 
@@ -138,10 +140,9 @@ void* init() {
         return;
 
     uint32_t KernelH[] = { 0x5FBFF0FB, 0x5A153F58, 0xB511FC4D, 0x348B7545, 0xB769339E };
-    void* arrayH[] = { &AI_LoadLibraryA ,&AI_GetModuleHandleA ,&AI_GetCommandLineA, &AI_GetStartupInfoA ,&AI_ExitProcess };
-    findFunc(kernel32Base, KernelH, arrayH, 5);
+    findFunc(kernel32Base, KernelH, &ai->AI_LoadLibraryA, 5);
 
-    HMODULE user32 = AI_LoadLibraryA("USER32.DLL");
+    HMODULE user32 = ai->AI_LoadLibraryA("USER32.DLL");
     uint32_t UserH[] = {
         0x110F756F,
         0xEF1BD604,
@@ -158,26 +159,9 @@ void* init() {
         0x2C1A4AD8,
         0x68F05E41,
     };
-    void* arrayU[] = {
-         &AI_LoadIconA,
-         &AI_LoadCursorA,
-         &AI_RegisterClassExA,
-         &AI_CreateWindowExA,
-         &AI_UpdateWindow,
-         &AI_GetMessageA,
-         &AI_TranslateMessage,
-         &AI_DispatchMessageA,
-         &AI_PostQuitMessage,
-         &AI_BeginPaint,
-         &AI_GetClientRect,
-         &AI_DrawTextA,
-         &AI_EndPaint,
-         &AI_DefWindowProcA
-    };
-    findFunc(user32, UserH, arrayU, 14);
+    findFunc(user32, UserH, &ai->AI_LoadIconA, 14);
 
-    HMODULE gdi32 = AI_LoadLibraryA("GDI32.DLL");
+    HMODULE gdi32 = ai->AI_LoadLibraryA("GDI32.DLL");
     uint32_t GdiH[] = { 0x6F828843 };
-    void* arrayG[] = { &AI_SetBkMode };
-    findFunc(gdi32, GdiH, arrayG, 1);
+    findFunc(gdi32, GdiH, &ai->AI_SetBkMode, 1);
 }
