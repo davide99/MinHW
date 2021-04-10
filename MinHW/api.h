@@ -127,11 +127,11 @@ void init(AI *ai) {
 
     for (PLIST_ENTRY ptr = peb->Ldr->InMemoryOrderModuleList.Flink; kernel32Base == 0; ptr = ptr->Flink) {
         PLDR_DATA_TABLE_ENTRY e = CONTAINING_RECORD(ptr, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
-        UNICODE_STRING* BaseDllName = e->Reserved4;
-        uint32_t dllNameHash = hash(BaseDllName->Buffer);
+        UNICODE_STRING* BaseDllName = (UNICODE_STRING*)e->Reserved4;
+        uint32_t dllNameHash = hash((uint8_t*)BaseDllName->Buffer);
 
         if (dllNameHash == KERNEL32DLL_UCASE_HASH || dllNameHash == KERNEL32DLL_LCASE_HASH)
-            kernel32Base = e->DllBase;
+            kernel32Base = (uintptr_t)e->DllBase;
     }
 
     if (kernel32Base == 0)

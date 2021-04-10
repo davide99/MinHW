@@ -5,7 +5,7 @@
 const char className[] = "MyWinClass";
 const char appName[] = "Dave's Tiny App";
 
-int WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
+int __stdcall WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 AI ai;
@@ -31,7 +31,11 @@ int main() {
     return 0;
 }
 
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int __stdcall WinMain(
+    _In_ HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPSTR lpCmdLine,
+    _In_ int nCmdShow) {
     WNDCLASSEX wc = {
         .cbSize = sizeof(WNDCLASSEX),
         .style = CS_HREDRAW | CS_VREDRAW,
