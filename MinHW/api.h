@@ -33,8 +33,8 @@ typedef LRESULT(__stdcall* DefWindowProcA_t)(HWND, UINT, WPARAM, LPARAM);
 //GDI32.DLL
 typedef int(__stdcall* SetBkMode_t)(HDC, int);
 
-typedef struct {
 #pragma pack(push, 1)
+typedef struct {
     //KERNEL32
     LoadLibraryA_t AI_LoadLibraryA;
     GetModuleHandleA_t AI_GetModuleHandleA;
@@ -60,8 +60,8 @@ typedef struct {
 
     //GDI32
     SetBkMode_t AI_SetBkMode;
-#pragma pack(pop)
 } AI;
+#pragma pack(pop)
 
 uint32_t hash(uint8_t* str) {
     uint32_t hash = 5381;
@@ -73,43 +73,45 @@ uint32_t hash(uint8_t* str) {
     return hash;
 }
 
-void findFunc(uint32_t dllBase, uint32_t* hashes, void*** ptrs, size_t size) {
+#pragma pack(push, 1)
+struct dll_info {
+    uint32_t exported_functions;
+    uintptr_t address_table_RVA;
+    uintptr_t name_pointer_table_RVA;
+    uintptr_t ordinal_table_RVA;
+};
+#pragma pack(pop)
+
+void findFunc(uintptr_t dllBase, uint32_t* hashes, void** ptrs, size_t size) {
     uintptr_t PE_RVA = *(uintptr_t*)((uint8_t*)dllBase + 0x3Cu);
-    char* PE = (char*)dllBase + PE_RVA;
+    uintptr_t PE = dllBase + *(uintptr_t*)((uint8_t*)dllBase + 0x3Cu);
 
     uintptr_t export_table_RVA = *(uintptr_t*)((uint8_t*)PE + 0x78u);
-    uint32_t exported_functions = *(uint32_t*)((uint8_t*)dllBase + export_table_RVA + 0x18u);
-    uintptr_t address_table_RVA = *(uintptr_t*)((uint8_t*)dllBase + export_table_RVA + 0x1cu);
-    uintptr_t name_pointer_table_RVA = *(uintptr_t*)((uint8_t*)dllBase + export_table_RVA + 0x20u);
-    uintptr_t ordinal_table_RVA = *(uintptr_t*)((uint8_t*)dllBase + export_table_RVA + 0x24u);
+    struct dll_info dll = *(struct dll_info*)((uint8_t*)dllBase + export_table_RVA + 0x18u);
 
-    uintptr_t name_pointer_table_entry_RVA = name_pointer_table_RVA;
+    uintptr_t name_pointer_table_entry_RVA = dll.name_pointer_table_RVA;
     uint32_t i, j;
 
     uintptr_t ordinal_function_RVA;
     uint16_t ordinal_function;
     uintptr_t function_RVA;
-    int found;
 
-    for (i=0; i < exported_functions; i++, name_pointer_table_entry_RVA += 4) {
+    for (i=0; i < dll.exported_functions; i++, name_pointer_table_entry_RVA += 4) {
         uintptr_t function_name_RVA = *(uintptr_t*)((uint8_t*)dllBase + name_pointer_table_entry_RVA);
         char* function_name = (uint8_t*)dllBase + function_name_RVA;
         uint32_t function_hash = hash(function_name);
-        found = 0;
 
-        for (j = 0; j < size && !found; j++) {
-            if (function_hash == hashes[j])
-                found = 1;
-        }
-        j--;
-        
-        if (found){
-            ordinal_function_RVA = ordinal_table_RVA + i * 2;
-            ordinal_function = *(uint16_t*)((uint8_t*)dllBase + ordinal_function_RVA);
+        for (j = 0; j < size; j++) {
+            if (function_hash == hashes[j]) {
+                ordinal_function_RVA = dll.ordinal_table_RVA + i * 2;
+                ordinal_function = *(uint16_t*)((uint8_t*)dllBase + ordinal_function_RVA);
 
-            function_RVA = *(uintptr_t*)((uint8_t*)dllBase + address_table_RVA + ordinal_function * 4);
+                function_RVA = *(uintptr_t*)((uint8_t*)dllBase + dll.address_table_RVA + ordinal_function * 4);
 
-            ptrs[j] = (uint8_t*)dllBase + function_RVA;
+                ptrs[j] = (uint8_t*)dllBase + function_RVA;
+
+                break;
+            }
         }
     }
 }
@@ -162,11 +164,11 @@ void init(AI *ai) {
         0x2C1A4AD8,
         0x68F05E41,
     };
-    findFunc(user32, User32Hashes, &ai->AI_LoadIconA, ARRAYSIZE(User32Hashes));
+    findFunc((uintptr_t)user32, User32Hashes, &ai->AI_LoadIconA, ARRAYSIZE(User32Hashes));
 
     HMODULE gdi32 = ai->AI_LoadLibraryA("GDI32.DLL");
     uint32_t Gdi32Hashes[] = {
         0x6F828843
     };
-    findFunc(gdi32, Gdi32Hashes, &ai->AI_SetBkMode, ARRAYSIZE(Gdi32Hashes));
+    findFunc((uintptr_t)gdi32, Gdi32Hashes, &ai->AI_SetBkMode, ARRAYSIZE(Gdi32Hashes));
 }
