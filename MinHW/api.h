@@ -105,7 +105,6 @@ void findFunc(uintptr_t dllBase, uint32_t* hashes, void** ptrs, size_t size) {
             if (function_hash == hashes[j]) {
                 ordinal_function_RVA = dll.ordinal_table_RVA + i * 2;
                 ordinal_function = *(uint16_t*)((uint8_t*)dllBase + ordinal_function_RVA);
-
                 function_RVA = *(uintptr_t*)((uint8_t*)dllBase + dll.address_table_RVA + ordinal_function * 4);
 
                 ptrs[j] = (uint8_t*)dllBase + function_RVA;
