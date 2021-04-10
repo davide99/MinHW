@@ -8,14 +8,16 @@ const char appName[] = "Dave's Tiny App";
 int WinMain(HINSTANCE, HINSTANCE, LPSTR, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-int main() {
-    init();
+AI ai;
 
-    HINSTANCE hInstance = AI_GetModuleHandleA(NULL); //Get the instance handle of this application
-    LPSTR cmdLine = AI_GetCommandLineA();            //Get a pointer to the command line
+int main() {
+    init(&ai);
+
+    HINSTANCE hInstance = ai.AI_GetModuleHandleA(NULL); //Get the instance handle of this application
+    LPSTR cmdLine = ai.AI_GetCommandLineA();            //Get a pointer to the command line
 
     STARTUPINFOA sui;
-    AI_GetStartupInfoA(&sui);
+    ai.AI_GetStartupInfoA(&sui);
     int ret;
 
     if (sui.dwFlags == STARTF_USESHOWWINDOW) {
@@ -24,7 +26,7 @@ int main() {
         ret = WinMain(hInstance, NULL, cmdLine, sui.wShowWindow);
     }
 
-    AI_ExitProcess((UINT)ret);
+    ai.AI_ExitProcess((UINT)ret);
 
     return 0;
 }
@@ -44,20 +46,20 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
     MSG msg;
     HWND hwnd;
 
-    wc.hIcon = AI_LoadIconA(NULL, IDI_APPLICATION);
+    wc.hIcon = ai.AI_LoadIconA(NULL, IDI_APPLICATION);
     wc.hIconSm = wc.hIcon;
-    wc.hCursor = AI_LoadCursorA(NULL, IDC_ARROW);
+    wc.hCursor = ai.AI_LoadCursorA(NULL, IDC_ARROW);
 
-    AI_RegisterClassExA(&wc);
-    hwnd = AI_CreateWindowExA(0, className, appName, WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, WINDOW_WIDTH, WINDOW_HEIGHT, NULL, NULL, hInstance, NULL);
+    ai.AI_RegisterClassExA(&wc);
+    hwnd = ai.AI_CreateWindowExA(0, className, appName, WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, WINDOW_WIDTH, WINDOW_HEIGHT, NULL, NULL, hInstance, NULL);
     if (hwnd == NULL)
         return 1;
 
-    AI_UpdateWindow(hwnd);
+    ai.AI_UpdateWindow(hwnd);
 
-    while (AI_GetMessageA(&msg, NULL, 0, 0)) {
-        AI_TranslateMessage(&msg);
-        AI_DispatchMessageA(&msg);
+    while (ai.AI_GetMessageA(&msg, NULL, 0, 0)) {
+        ai.AI_TranslateMessage(&msg);
+        ai.AI_DispatchMessageA(&msg);
     }
 
     return (int)msg.wParam;
@@ -70,17 +72,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
     switch (message) {
     case WM_DESTROY:
-        AI_PostQuitMessage(0);
+        ai.AI_PostQuitMessage(0);
         break;
 
     case WM_PAINT:
-        hdc = AI_BeginPaint(hwnd, &ps);
+        hdc = ai.AI_BeginPaint(hwnd, &ps);
         {
-            AI_SetBkMode(hdc, TRANSPARENT);
-            AI_GetClientRect(hwnd, &rect);
-            AI_DrawTextA(hdc, appName, -1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+            ai.AI_SetBkMode(hdc, TRANSPARENT);
+            ai.AI_GetClientRect(hwnd, &rect);
+            ai.AI_DrawTextA(hdc, appName, -1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
         }
-        AI_EndPaint(hwnd, &ps);
+        ai.AI_EndPaint(hwnd, &ps);
         break;
 
     default:
