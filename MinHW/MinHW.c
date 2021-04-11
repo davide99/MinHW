@@ -9,6 +9,16 @@ int __stdcall WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 AI ai;
+WNDCLASSEX wc = {
+        .cbSize = sizeof(WNDCLASSEX),
+        .style = CS_HREDRAW | CS_VREDRAW,
+        .lpfnWndProc = WndProc,
+        .cbClsExtra = 0,
+        .cbWndExtra = 0,
+        .hbrBackground = COLOR_3DSHADOW + 1,
+        .lpszMenuName = NULL,
+        .lpszClassName = className
+};
 
 int main() {
     init(&ai);
@@ -36,20 +46,10 @@ int __stdcall WinMain(
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPSTR lpCmdLine,
     _In_ int nCmdShow) {
-    WNDCLASSEX wc = {
-        .cbSize = sizeof(WNDCLASSEX),
-        .style = CS_HREDRAW | CS_VREDRAW,
-        .lpfnWndProc = WndProc,
-        .cbClsExtra = 0,
-        .cbWndExtra = 0,
-        .hInstance = hInstance,
-        .hbrBackground = COLOR_3DSHADOW + 1,
-        .lpszMenuName = NULL,
-        .lpszClassName = className
-    };
     MSG msg;
     HWND hwnd;
 
+    wc.hInstance = hInstance;
     wc.hIcon = ai.AI_LoadIconA(NULL, IDI_APPLICATION);
     wc.hIconSm = wc.hIcon;
     wc.hCursor = ai.AI_LoadCursorA(NULL, IDC_ARROW);
