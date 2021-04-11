@@ -392,6 +392,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="api.c" />
     <ClCompile Include="MinHW.c" />
   </ItemGroup>
   <ItemGroup>

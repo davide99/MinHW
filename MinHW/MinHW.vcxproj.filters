@@ -18,6 +18,9 @@
     <ClCompile Include="MinHW.c">
       <Filter>File di origine</Filter>
     </ClCompile>
+    <ClCompile Include="api.c">
+      <Filter>File di origine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="api.h">
