@@ -175,7 +175,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <SectionAlignment>32</SectionAlignment>
+      <SectionAlignment>16</SectionAlignment>
       <EnableUAC>false</EnableUAC>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>

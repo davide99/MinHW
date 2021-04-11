@@ -34,7 +34,7 @@ typedef LRESULT(__stdcall* DefWindowProcA_t)(HWND, UINT, WPARAM, LPARAM);
 typedef int(__stdcall* SetBkMode_t)(HDC, int);
 
 #pragma pack(push, 1)
-typedef struct {
+typedef __declspec(align(4)) struct {
     //KERNEL32
     LoadLibraryA_t AI_LoadLibraryA;
     GetModuleHandleA_t AI_GetModuleHandleA;
@@ -115,14 +115,8 @@ void findFunc(uintptr_t dllBase, uint32_t* hashes, void** ptrs, size_t size) {
     }
 }
 
-__declspec(naked)
-void* getPEB() {
-    __asm mov EAX, FS:[30h]
-    __asm ret
-}
-
 void init(AI *ai) {
-    PPEB peb = getPEB();
+    PPEB peb = __readfsdword(0x30);
     uintptr_t kernel32Base = 0;
 
     for (PLIST_ENTRY ptr = peb->Ldr->InMemoryOrderModuleList.Flink; kernel32Base == 0; ptr = ptr->Flink) {
@@ -166,8 +160,6 @@ void init(AI *ai) {
     findFunc((uintptr_t)user32, User32Hashes, &ai->AI_LoadIconA, ARRAYSIZE(User32Hashes));
 
     HMODULE gdi32 = ai->AI_LoadLibraryA("GDI32.DLL");
-    uint32_t Gdi32Hashes[] = {
-        0x6F828843
-    };
-    findFunc((uintptr_t)gdi32, Gdi32Hashes, &ai->AI_SetBkMode, ARRAYSIZE(Gdi32Hashes));
+    uint32_t Gdi32Hash = 0x6F828843;
+    findFunc((uintptr_t)gdi32, &Gdi32Hash, &ai->AI_SetBkMode, 1);
 }
