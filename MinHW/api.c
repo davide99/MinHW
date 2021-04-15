@@ -64,25 +64,25 @@ static void findFunc(uintptr_t dllBase, uint32_t* hashes, void** ptrs, size_t si
     uintptr_t PE = dllBase + *(uintptr_t*)((uint8_t*)dllBase + 0x3Cu);
 
     uintptr_t export_table_RVA = *(uintptr_t*)((uint8_t*)PE + 0x78u);
-    struct dll_info dll = *(struct dll_info*)((uint8_t*)dllBase + export_table_RVA + 0x18u);
+    struct dll_info *dll = (uint8_t*)dllBase + export_table_RVA + 0x18u;
 
-    uintptr_t name_pointer_table_entry_RVA = dll.name_pointer_table_RVA;
+    uintptr_t name_pointer_table_entry_RVA = dll->name_pointer_table_RVA;
     uint32_t i, j;
 
     uintptr_t ordinal_function_RVA;
     uint16_t ordinal_function;
     uintptr_t function_RVA;
 
-    for (i = 0; i < dll.exported_functions; i++, name_pointer_table_entry_RVA += 4) {
+    for (i = 0; i < dll->exported_functions; i++, name_pointer_table_entry_RVA += 4) {
         uintptr_t function_name_RVA = *(uintptr_t*)((uint8_t*)dllBase + name_pointer_table_entry_RVA);
         char* function_name = (uint8_t*)dllBase + function_name_RVA;
         uint32_t function_hash = hash(function_name);
 
         for (j = 0; j < size; j++) {
             if (function_hash == hashes[j]) {
-                ordinal_function_RVA = dll.ordinal_table_RVA + i * 2;
+                ordinal_function_RVA = dll->ordinal_table_RVA + i * 2;
                 ordinal_function = *(uint16_t*)((uint8_t*)dllBase + ordinal_function_RVA);
-                function_RVA = *(uintptr_t*)((uint8_t*)dllBase + dll.address_table_RVA + ordinal_function * 4);
+                function_RVA = *(uintptr_t*)((uint8_t*)dllBase + dll->address_table_RVA + ordinal_function * 4);
 
                 ptrs[j] = (uint8_t*)dllBase + function_RVA;
 
