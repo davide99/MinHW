@@ -29,7 +29,7 @@ typedef LRESULT(__stdcall* DefWindowProcA_t)(HWND, UINT, WPARAM, LPARAM);
 typedef int(__stdcall* SetBkMode_t)(HDC, int);
 
 #pragma pack(push, 1)
-typedef __declspec(align(4)) struct {
+typedef __declspec(align(1)) struct {
     //KERNEL32
     LoadLibraryA_t _LoadLibraryA;
     GetModuleHandleA_t _GetModuleHandleA;

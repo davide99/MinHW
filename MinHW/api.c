@@ -2,35 +2,35 @@
 #include <stdint.h>
 #include <winternl.h>
 
-#define KERNEL32DLL_UCASE_HASH 0x2B5F0u
-#define KERNEL32DLL_LCASE_HASH 0x2B610u
+#define KERNEL32DLL_UCASE_HASH 0x6DDB9555u
+#define KERNEL32DLL_LCASE_HASH 0x7040EE75u
 
 uint32_t Kernel32Hashes[] = {
-        0x5FBFF0FB,
-        0x5A153F58,
-        0xB511FC4D,
-        0x348B7545,
-        0xB769339E
+        0x5FBFF0FBu,
+        0x5A153F58u,
+        0xB511FC4Du,
+        0x348B7545u,
+        0xB769339Eu
 };
 
 uint32_t User32Hashes[] = {
-        0x110F756F,
-        0xEF1BD604,
-        0x932EB07E,
-        0x1C82E26F,
-        0xE870E800,
-        0xCBCEB9AB,
-        0xE5425A58,
-        0xABA0605B,
-        0x218F96D3,
-        0xDD158C66,
-        0xB05422B2,
-        0x5F0BBD59,
-        0x2C1A4AD8,
-        0x68F05E41,
+        0x110F756Fu,
+        0xEF1BD604u,
+        0x932EB07Eu,
+        0x1C82E26Fu,
+        0xE870E800u,
+        0xCBCEB9ABu,
+        0xE5425A58u,
+        0xABA0605Bu,
+        0x218F96D3u,
+        0xDD158C66u,
+        0xB05422B2u,
+        0x5F0BBD59u,
+        0x2C1A4AD8u,
+        0x68F05E41u
 };
 
-uint32_t Gdi32Hash = 0x6F828843;
+uint32_t Gdi32Hash = 0x6F828843u;
 
 #pragma pack(push, 1)
 struct dll_info {
@@ -41,12 +41,14 @@ struct dll_info {
 };
 #pragma pack(pop)
 
-static uint32_t hash(uint8_t* str) {
+static uint32_t hash(uint8_t* str, int stride) {
     uint32_t hash = 5381;
     uint8_t c;
 
-    while (c = *str++)
+    while (c = *str) {
         hash = ((hash << 5u) + hash) + c;
+        str += stride;
+    }
 
     return hash;
 }
@@ -68,7 +70,7 @@ static void findFunc(uintptr_t dllBase, uint32_t* hashes, void** ptrs, size_t si
     for (i = 0; i < dll.exported_functions; i++, name_pointer_table_entry_RVA += 4) {
         uintptr_t function_name_RVA = *(uintptr_t*)((uint8_t*)dllBase + name_pointer_table_entry_RVA);
         char* function_name = (uint8_t*)dllBase + function_name_RVA;
-        uint32_t function_hash = hash(function_name);
+        uint32_t function_hash = hash(function_name, 1);
 
         for (j = 0; j < size; j++) {
             if (function_hash == hashes[j]) {
@@ -91,14 +93,11 @@ void initAPI(API* api) {
     for (PLIST_ENTRY ptr = peb->Ldr->InMemoryOrderModuleList.Flink; kernel32Base == 0; ptr = ptr->Flink) {
         PLDR_DATA_TABLE_ENTRY e = CONTAINING_RECORD(ptr, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
         UNICODE_STRING* BaseDllName = (UNICODE_STRING*)e->Reserved4;
-        uint32_t dllNameHash = hash((uint8_t*)BaseDllName->Buffer);
+        uint32_t dllNameHash = hash((uint8_t*)BaseDllName->Buffer, 2);
 
         if (dllNameHash == KERNEL32DLL_UCASE_HASH || dllNameHash == KERNEL32DLL_LCASE_HASH)
             kernel32Base = (uintptr_t)e->DllBase;
     }
-
-    if (kernel32Base == 0)
-        return;
 
     findFunc(kernel32Base, Kernel32Hashes, &api->_LoadLibraryA, ARRAYSIZE(Kernel32Hashes));
 
