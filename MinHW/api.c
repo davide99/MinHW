@@ -2,8 +2,16 @@
 #include <stdint.h>
 #include <winternl.h>
 
-#define KERNEL32DLL_UCASE_HASH 0x6DDB9555u
-#define KERNEL32DLL_LCASE_HASH 0x7040EE75u
+#define KERNEL32DLL_HASH 0x536CD652u
+
+typedef struct {
+    PVOID Reserved1[2];
+    LIST_ENTRY InMemoryOrderLinks;
+    PVOID Reserved2[2];
+    PVOID DllBase;
+    uint8_t pad[116];
+    ULONG BaseNameHashValue;
+} MY_LDR_DATA_TABLE_ENTRY;
 
 uint32_t Kernel32Hashes[] = {
         0x5FBFF0FBu,
@@ -41,14 +49,12 @@ struct dll_info {
 };
 #pragma pack(pop)
 
-static uint32_t hash(uint8_t* str, int stride) {
+static uint32_t hash(uint8_t* str) {
     uint32_t hash = 5381;
     uint8_t c;
 
-    while (c = *str) {
+    while (c = *(str++))
         hash = ((hash << 5u) + hash) + c;
-        str += stride;
-    }
 
     return hash;
 }
@@ -70,7 +76,7 @@ static void findFunc(uintptr_t dllBase, uint32_t* hashes, void** ptrs, size_t si
     for (i = 0; i < dll.exported_functions; i++, name_pointer_table_entry_RVA += 4) {
         uintptr_t function_name_RVA = *(uintptr_t*)((uint8_t*)dllBase + name_pointer_table_entry_RVA);
         char* function_name = (uint8_t*)dllBase + function_name_RVA;
-        uint32_t function_hash = hash(function_name, 1);
+        uint32_t function_hash = hash(function_name);
 
         for (j = 0; j < size; j++) {
             if (function_hash == hashes[j]) {
@@ -91,11 +97,9 @@ void initAPI(API* api) {
     uintptr_t kernel32Base = 0;
 
     for (PLIST_ENTRY ptr = peb->Ldr->InMemoryOrderModuleList.Flink; kernel32Base == 0; ptr = ptr->Flink) {
-        PLDR_DATA_TABLE_ENTRY e = CONTAINING_RECORD(ptr, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
-        UNICODE_STRING* BaseDllName = (UNICODE_STRING*)e->Reserved4;
-        uint32_t dllNameHash = hash((uint8_t*)BaseDllName->Buffer, 2);
-
-        if (dllNameHash == KERNEL32DLL_UCASE_HASH || dllNameHash == KERNEL32DLL_LCASE_HASH)
+        MY_LDR_DATA_TABLE_ENTRY *e = CONTAINING_RECORD(ptr, MY_LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
+        
+        if (e->BaseNameHashValue == KERNEL32DLL_HASH)
             kernel32Base = (uintptr_t)e->DllBase;
     }
 
