@@ -31,5 +31,6 @@
     <None Include="stub.bin">
       <Filter>File di risorse</Filter>
     </None>
+    <None Include=".gitignore" />
   </ItemGroup>
 </Project>

@@ -49,7 +49,7 @@ struct dll_info {
 };
 #pragma pack(pop)
 
-static uint32_t hash(uint8_t* str) {
+static uint32_t djb2(uint8_t* str) {
     uint32_t hash = 5381;
     uint8_t c;
 
@@ -76,7 +76,7 @@ static void findFunc(uintptr_t dllBase, uint32_t* hashes, void** ptrs, size_t si
     for (i = 0; i < dll->exported_functions; i++, name_pointer_table_entry_RVA += 4) {
         uintptr_t function_name_RVA = *(uintptr_t*)((uint8_t*)dllBase + name_pointer_table_entry_RVA);
         char* function_name = (uint8_t*)dllBase + function_name_RVA;
-        uint32_t function_hash = hash(function_name);
+        uint32_t function_hash = djb2(function_name);
 
         for (j = 0; j < size; j++) {
             if (function_hash == hashes[j]) {
